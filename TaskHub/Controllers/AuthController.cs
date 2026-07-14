@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -49,14 +50,20 @@ public class AuthController : ControllerBase
 
         var roles = await _userManager.GetRolesAsync(user);
 
-        var claims = new[]
+        var claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim(ClaimTypes.Role, roles.FirstOrDefault() ?? "User")
+            new Claim(JwtRegisteredClaimNames.Email, user.Email ?? email)
         };
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JwtSettings:Secret"]));
+        // Add all roles as separate claims
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
+
+        var secret = _config["JwtSettings:Secret"] ?? throw new InvalidOperationException("JWT Secret is not configured");
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
@@ -90,6 +97,13 @@ public class AuthController : ControllerBase
         return result.Succeeded ? Ok("Password reset successful") : BadRequest(result.Errors);
     }
 
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<IActionResult> Logout()
+    {
+        await _signInManager.SignOutAsync();
+        return Ok("Logged out successfully");
+    }
 
     [HttpGet("external-login")]
     public IActionResult ExternalLogin(string provider, string returnUrl = "/")
@@ -111,6 +125,7 @@ public class AuthController : ControllerBase
         var email = info.Principal.FindFirstValue(ClaimTypes.Email);
         var user = new ApplicationUser { UserName = email, Email = email, FullName = email };
         await _userManager.CreateAsync(user);
+        await _userManager.AddToRoleAsync(user, "User");
         await _userManager.AddLoginAsync(user, info);
         await _signInManager.SignInAsync(user, false);
 
