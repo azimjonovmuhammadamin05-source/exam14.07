@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TaskHub")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d9f16ea62212c43a36af85112d7c719982a7b7f6")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7480c0df58c8d31e7b75bd0262f3c2f65ab50300")]
 [assembly: System.Reflection.AssemblyProductAttribute("TaskHub")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TaskHub")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,10 +1,23 @@
-using Microsoft.AspNetCore.Identity.UI.Services;
-
-public class ConsoleEmailSender : IEmailSender
+namespace TaskHub.Service
 {
-    public Task SendEmailAsync(string email, string subject, string htmlMessage)
+    public class Email : IEmailSender
     {
-        Console.WriteLine($"To: {email}\nSubject: {subject}\nMessage: {htmlMessage}");
-        return Task.CompletedTask;
+        private readonly ILogger<Email> _logger;
+
+        public Email(ILogger<Email> logger)
+        {
+            _logger = logger;
+        }
+
+        public Task SendEmailAsync(string toEmail, string subject, string body)
+        {
+            _logger.LogInformation("========== EMAIL ==========");
+            _logger.LogInformation("To: {Email}", toEmail);
+            _logger.LogInformation("Subject: {Subject}", subject);
+            _logger.LogInformation("Body:\n{Body}", body);
+            _logger.LogInformation("===========================");
+
+            return Task.CompletedTask;
+        }
     }
 }

@@ -1,11 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
+using TaskHub.Service;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using TaskHub.Models;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -77,25 +78,41 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("forgot-password")]
-    public async Task<IActionResult> ForgotPassword(string email)
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request)
     {
-        var user = await _userManager.FindByEmailAsync(email);
-        if (user == null) return BadRequest("User not found");
+        var user = await _userManager.FindByEmailAsync(request.Email);
+
+        if (user == null)
+            return BadRequest("User not found");
 
         var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-        await _emailSender.SendEmailAsync(email, "Reset Password", $"Token: {token}");
-        return Ok("Reset token generated and logged");
+
+        await _emailSender.SendEmailAsync(
+            request.Email,
+            "Reset Password",
+            $"Your reset token:\n\n{token}");
+
+        return Ok("Reset token generated successfully.");
     }
 
     [HttpPost("reset-password")]
-    public async Task<IActionResult> ResetPassword(string email, string token, string newPassword)
-    {
-        var user = await _userManager.FindByEmailAsync(email);
-        if (user == null) return BadRequest("User not found");
+public async Task<IActionResult> ResetPassword(ResetPasswordRequest request)
+{
+    var user = await _userManager.FindByEmailAsync(request.Email);
 
-        var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
-        return result.Succeeded ? Ok("Password reset successful") : BadRequest(result.Errors);
-    }
+    if (user == null)
+        return BadRequest("User not found");
+
+    var result = await _userManager.ResetPasswordAsync(
+        user,
+        request.Token,
+        request.NewPassword);
+
+    if (!result.Succeeded)
+        return BadRequest(result.Errors);
+
+    return Ok("Password has been reset successfully.");
+}
 
     [HttpPost("logout")]
     [Authorize]
